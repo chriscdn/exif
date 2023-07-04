@@ -101,7 +101,7 @@ const exif = async (
 
   if (typeof item === "string" && !_exif.width && !_exif.height) {
     // This block is for node.js only.  Browser, out of luck.
-    const probe = await import("probe-image-size");
+    const { default: probe } = await import("probe-image-size");
     const results = await probe(item);
 
     if (results?.width && results?.height) {
@@ -113,4 +113,4 @@ const exif = async (
   return _exif;
 };
 
-export default exif;
+export { exif };

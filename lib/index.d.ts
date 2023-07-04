@@ -10,4 +10,4 @@ export type TExifData = {
     height?: number;
 };
 declare const exif: (item: File | string) => Promise<TExifData>;
-export default exif;
+export { exif };
