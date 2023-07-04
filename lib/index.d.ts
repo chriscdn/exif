@@ -8,6 +8,7 @@ export type TExifData = {
     description: string | null;
     width: number | null;
     height: number | null;
+    isPrecise: boolean;
 };
 declare const exif: (item: File | string) => Promise<TExifData>;
 export default exif;

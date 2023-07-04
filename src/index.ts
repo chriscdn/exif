@@ -13,6 +13,7 @@ export type TExifData = {
   description: string | null;
   width: number | null;
   height: number | null;
+  isPrecise: boolean;
 };
 
 // TS type guard
@@ -64,6 +65,7 @@ const exif = async (
     description: null,
     width: null,
     height: null,
+    isPrecise: false,
   };
 
   _exif.latitude = data.latitude ?? null; //    get(data, "latitude", null);
@@ -98,6 +100,8 @@ const exif = async (
     const offsetInMinutes: number | null = offsetTimeOriginal
       ? -offsetStringToMinutes(offsetTimeOriginal)
       : null;
+
+    _exif.isPrecise = Boolean(zone) || Boolean(offsetInMinutes);
 
     // This is a luxon DateTime object.  The setZone function doesn't mutate the
     // date and time, unless keepLocalTime is true.  What this means: Use the
