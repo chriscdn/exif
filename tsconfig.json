@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["dom", "ESNext"],
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "sourceMap": true,
+    "declaration": true,
+    "module": "esnext",
+    "outDir": "./lib"
+  },
+  "include": ["./src/**/*"]
+}
