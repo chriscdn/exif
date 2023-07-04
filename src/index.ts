@@ -7,13 +7,36 @@ export type TExifData = {
   latitude?: number;
   longitude?: number;
   timezone?: string;
-  local_time?: string; // e.g., 2023-01-01T09:45:64, relative to location
+  localTime?: string; // e.g., 2023-01-01T09:45:64, relative to location
   timestamp?: number;
   timeZoneOffsetInMinutes?: number;
   description?: string;
   width?: number;
   height?: number;
 };
+
+// TS type guard
+function isFile(e: File | string): e is File {
+  return typeof e !== "string";
+}
+
+async function getSizeInBrowser(
+  file: File,
+): Promise<{ width: number; height: number }> {
+  return new Promise((resolve) => {
+    const URL = window.URL || window.webkitURL;
+    const image = new Image();
+
+    image.onload = () => {
+      resolve({
+        width: image.width,
+        height: image.height,
+      });
+    };
+
+    image.src = URL.createObjectURL(file);
+  });
+}
 
 // e.g., +02:00 => 120
 function offsetStringToMinutes(offset: string): number {
@@ -75,42 +98,52 @@ const exif = async (
     // offsetInMinutes if we have it, otherwise, use the timeZone.  If neither
     // are present then we are out of luck, and the system timeZone will be
     // used.  An undefined zone implies the local time zone of the computer.
-    const utcDateTime = DateTime.utc(
+
+    const fixedDateTime = DateTime.utc(
       dateTimeOriginal.getFullYear(),
       dateTimeOriginal.getMonth() + 1,
       dateTimeOriginal.getDate(),
       dateTimeOriginal.getHours(),
       dateTimeOriginal.getMinutes(),
       dateTimeOriginal.getSeconds(),
-    );
-
-    const fixedDateTime = utcDateTime
+    )
       .plus({ minutes: offsetInMinutes })
       .setZone(zone, { keepLocalTime: offsetInMinutes === undefined });
 
     _exif.timestamp = fixedDateTime.toMillis();
+
     // yes, negative, since we negated it earlier
     _exif.timeZoneOffsetInMinutes = offsetInMinutes
       ? -offsetInMinutes
-      : undefined;
-    _exif.local_time = fixedDateTime.toFormat("yyyy-MM-dd'T'HH:mm:ss");
+      : fixedDateTime.offset;
+
+    _exif.localTime = fixedDateTime.toFormat("yyyy-MM-dd'T'HH:mm:ss");
   }
 
   _exif.width = get(data, "ExifImageWidth");
   _exif.height = get(data, "ExifImageHeight");
 
-  if (typeof item === "string" && !_exif.width && !_exif.height) {
-    // This block is for node.js only.  Browser, out of luck.
-    const { default: probe } = await import("probe-image-size");
-    const results = await probe(item);
+  if (!_exif.width && !_exif.height) {
+    // if we have a file path
+    if (typeof item === "string") {
+      // This block is for node.js only.
+      const { default: probe } = await import("probe-image-size");
+      const results = await probe(item);
 
-    if (results?.width && results?.height) {
+      if (results?.width && results?.height) {
+        _exif.width = results.width;
+        _exif.height = results.height;
+      }
+    } else if (window && isFile(item)) {
+      const results = await getSizeInBrowser(item);
+
       _exif.width = results.width;
       _exif.height = results.height;
+    } else {
+      // out of luck
     }
   }
-
   return _exif;
 };
 
-export { exif };
+export default exif;
