@@ -1,7 +1,7 @@
 export type TExifData = {
     latitude: number | null;
     longitude: number | null;
-    timezone: string | null;
+    timeZone: string | null;
     localTime: string | null;
     timestamp: number | null;
     timeZoneOffsetInMinutes: number | null;

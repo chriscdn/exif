@@ -1,12 +1,11 @@
 import { parse } from "exifr";
-
 import { DateTime } from "luxon";
 import tzlookup from "tz-lookup";
 
 export type TExifData = {
   latitude: number | null;
   longitude: number | null;
-  timezone: string | null;
+  timeZone: string | null;
   localTime: string | null; // e.g., 2023-01-01T09:45:64, relative to location
   timestamp: number | null; // in milliseconds
   timeZoneOffsetInMinutes: number | null;
@@ -21,6 +20,12 @@ function isFile(e: File | string): e is File {
   return typeof e !== "string";
 }
 
+/**
+ * A browser function for getting the width and height of an image.
+ *
+ * @param file {File}
+ * @returns
+ */
 async function getSizeInBrowser(
   file: File,
 ): Promise<{ width: number; height: number }> {
@@ -39,7 +44,13 @@ async function getSizeInBrowser(
   });
 }
 
-// e.g., +02:00 => 120
+//
+/**
+ * Convert a time zone offset to minutes.  e.g., +02:00 => 120
+ *
+ * @param offset
+ * @returns
+ */
 function offsetStringToMinutes(offset: string): number {
   const split = offset.split(":");
   const hours = parseInt(split[0]);
@@ -53,12 +64,10 @@ function offsetStringToMinutes(offset: string): number {
 const exif = async (
   item: File | string,
 ): Promise<TExifData> => {
-  const data = await parse(item, true);
-
   const _exif: TExifData = {
     latitude: null,
     longitude: null,
-    timezone: null,
+    timeZone: null,
     localTime: null,
     timestamp: null,
     timeZoneOffsetInMinutes: null,
@@ -68,11 +77,13 @@ const exif = async (
     isPrecise: false,
   };
 
+  const data = await parse(item, true);
+
   _exif.latitude = data.latitude ?? null; //    get(data, "latitude", null);
   _exif.longitude = data.longitude ?? null; // ; get(data, "longitude", null);
 
   if (_exif.latitude && _exif.longitude) {
-    _exif.timezone = tzlookup(_exif.latitude, _exif.longitude);
+    _exif.timeZone = tzlookup(_exif.latitude, _exif.longitude);
   }
 
   const imageDescription = data.ImageDescription ?? null;
@@ -95,7 +106,7 @@ const exif = async (
     // DateTimeOriginal is constructed by exifr and assumes local (browser, OS)
     // time zone.  It's wrong.  We need to fix this.
 
-    const zone: string | null = _exif.timezone;
+    const zone: string | null = _exif.timeZone;
 
     const offsetInMinutes: number | null = offsetTimeOriginal
       ? -offsetStringToMinutes(offsetTimeOriginal)
