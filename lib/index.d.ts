@@ -1,13 +1,13 @@
 export type TExifData = {
-    latitude?: number;
-    longitude?: number;
-    timezone?: string;
-    localTime?: string;
-    timestamp?: number;
-    timeZoneOffsetInMinutes?: number;
-    description?: string;
-    width?: number;
-    height?: number;
+    latitude: number | null;
+    longitude: number | null;
+    timezone: string | null;
+    localTime: string | null;
+    timestamp: number | null;
+    timeZoneOffsetInMinutes: number | null;
+    description: string | null;
+    width: number | null;
+    height: number | null;
 };
 declare const exif: (item: File | string) => Promise<TExifData>;
 export default exif;
