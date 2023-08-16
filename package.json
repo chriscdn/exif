@@ -1,10 +1,12 @@
 {
   "name": "@chriscdn/exif",
-  "version": "0.0.5",
-  "main": "./lib/index.js",
+  "version": "0.0.6",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/mjs/index.js",
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf ./lib && tsc -p tsconfig.json",
+    "build-2": "rm -rf ./lib && tsc -p tsconfig.json",
+    "build": "rm -rf ./dist/ && tsc -p tsconfig-cjs.json && tsc -p tsconfig-esm.json",
     "watch": "nodemon"
   },
   "dependencies": {

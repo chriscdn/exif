@@ -1,4 +1,7 @@
-import { parse } from "exifr";
+import pkg from "exifr";
+const { parse } = pkg;
+
+// import { parse } from "exifr";
 import { DateTime } from "luxon";
 import tzlookup from "tz-lookup";
 
@@ -10,8 +13,8 @@ export type TExifData = {
   timestamp: number | null; // in milliseconds
   timeZoneOffsetInMinutes: number | null;
   description: string | null;
-  width: number | null;
-  height: number | null;
+  width: number;
+  height: number;
   isPrecise: boolean;
 };
 
@@ -27,7 +30,7 @@ function isFile(e: File | string): e is File {
  * @returns
  */
 async function getSizeInBrowser(
-  file: File,
+  file: File
 ): Promise<{ width: number; height: number }> {
   return new Promise((resolve) => {
     const URL = window.URL || window.webkitURL;
@@ -61,9 +64,7 @@ function offsetStringToMinutes(offset: string): number {
   return hours * 60 + factor * minutes;
 }
 
-const exif = async (
-  item: File | string,
-): Promise<TExifData> => {
+const exif = async (item: File | string): Promise<TExifData> => {
   const _exif: TExifData = {
     latitude: null,
     longitude: null,
@@ -72,8 +73,8 @@ const exif = async (
     timestamp: null,
     timeZoneOffsetInMinutes: null,
     description: null,
-    width: null,
-    height: null,
+    width: 0,
+    height: 0,
     isPrecise: false,
   };
 
@@ -126,7 +127,7 @@ const exif = async (
       dateTimeOriginal.getDate(),
       dateTimeOriginal.getHours(),
       dateTimeOriginal.getMinutes(),
-      dateTimeOriginal.getSeconds(),
+      dateTimeOriginal.getSeconds()
     )
       .plus({ minutes: offsetInMinutes ?? undefined })
       .setZone(zone ?? undefined, {

@@ -3,13 +3,13 @@
     "target": "ESNext",
     "lib": ["dom", "ESNext"],
     "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "NodeNext",
+    "allowSyntheticDefaultImports": true,
     "strict": true,
     "sourceMap": true,
     "declaration": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "NodeNext",
-    "module": "esnext"
+    "module": "esnext",
+    "outDir": "./lib"
   },
   "include": ["./src/**/*"]
 }
