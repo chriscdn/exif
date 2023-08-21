@@ -1,7 +1,6 @@
 import pkg from "exifr";
 const { parse } = pkg;
 
-// import { parse } from "exifr";
 import { DateTime } from "luxon";
 import tzlookup from "tz-lookup";
 
@@ -21,6 +20,14 @@ export type TExifData = {
 // TS type guard
 function isFile(e: File | string): e is File {
   return typeof e !== "string";
+}
+
+function isDate(value: unknown): value is Date {
+  return (
+    value instanceof Date ||
+    (typeof value === "object" &&
+      Object.prototype.toString.call(value) === "[object Date]")
+  );
 }
 
 /**
@@ -54,6 +61,9 @@ async function getSizeInBrowser(
  * @param offset
  * @returns
  */
+
+// from luxon
+// Duration.fromISOTime('05:00').as('milliseconds'));
 function offsetStringToMinutes(offset: string): number {
   const split = offset.split(":");
   const hours = parseInt(split[0]);
@@ -91,11 +101,14 @@ const exif = async (item: File | string): Promise<TExifData> => {
   _exif.description = imageDescription ? String(imageDescription).trim() : null;
 
   // The exifr library gives us a Date object, but with the time zone of the
-  // computer doing the parsing.  This is really bad.  So we must adjust this to get the correct time.
+  // computer doing the parsing.  This is really bad, so we must adjust this to
+  // get the correct time with the correct offset.
   //
   // https://github.com/MikeKovarik/exifr/issues/90
 
-  const dateTimeOriginal: Date | null = data.DateTimeOriginal ?? null;
+  // Sometimes exifr gives us a string here (e.g., with PNG files).
+
+  const dateTimeOriginal: string | Date | null = data.DateTimeOriginal ?? null;
 
   // This is the offset of the DateTimeOriginal.  This seems to be present in
   // later versions of iOS, but older versions don't seem to have it.
@@ -103,7 +116,7 @@ const exif = async (item: File | string): Promise<TExifData> => {
   // https://exiftool.org/TagNames/EXIF.html
   const offsetTimeOriginal: string | null = data.OffsetTimeOriginal ?? null;
 
-  if (dateTimeOriginal) {
+  if (isDate(dateTimeOriginal)) {
     // DateTimeOriginal is constructed by exifr and assumes local (browser, OS)
     // time zone.  It's wrong.  We need to fix this.
 
@@ -115,8 +128,8 @@ const exif = async (item: File | string): Promise<TExifData> => {
 
     _exif.isPrecise = Boolean(zone) || Boolean(offsetInMinutes);
 
-    // This is a luxon DateTime object.  The setZone function doesn't mutate the
-    // date and time, unless keepLocalTime is true.  What this means: Use the
+    // DateTime is a luxon object.  The setZone function doesn't mutate the date
+    // and time, unless keepLocalTime is true.  What this means: Use the
     // offsetInMinutes if we have it, otherwise, use the timeZone.  If neither
     // are present then we are out of luck, and the system timeZone will be
     // used.  An undefined zone implies the local time zone of the computer.
