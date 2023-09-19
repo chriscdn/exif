@@ -1,15 +1,5 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["dom", "ESNext"],
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "sourceMap": true,
-    "declaration": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "NodeNext",
-    "module": "esnext"
-  },
-  "include": ["./src/**/*"]
+    "allowSyntheticDefaultImports": true
+  }
 }
