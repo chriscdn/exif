@@ -1,6 +1,6 @@
 {
   "name": "@chriscdn/exif",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "license": "MIT",
   "type": "module",
   "source": "./src/index.ts",
@@ -8,6 +8,7 @@
   "module": "./lib/exif.module.js",
   "unpkg": "./lib/exif.umd.js",
   "exports": {
+    "types": "./lib/index.d.ts",
     "require": "./lib/exif.cjs",
     "default": "./lib/exif.modern.js"
   },
