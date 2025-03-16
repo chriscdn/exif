@@ -10,7 +10,7 @@ This library, built on [exifr](https://github.com/MikeKovarik/exifr), extracts m
 - **Date & Time** – Uses the time zone to determine the UTC time of the photo.
 - **Dimensions** – Retrieves the image width and height.
 
-Attemps are made to normalize the results from `exifr`, which can vary on the source.
+Attemps are made to normalize the results from `exifr`, which can vary among image types.
 
 **Note**: This package has only been tested with HEIC, PNG, and JPG files.
 
