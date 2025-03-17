@@ -8,9 +8,6 @@ import {
 
 import { type Source, type TExifData } from "./types";
 import { extractDateTime } from "./extraction-datetime";
-import fs from "fs";
-
-import probe from "probe-image-size";
 
 const { parse } = pkg;
 
@@ -28,8 +25,6 @@ const exif = async (item: Source): Promise<TExifData> => {
   };
 
   const data = await parse(item, true);
-
-  // console.log(JSON.stringify(data));
 
   // fs.promises.writeFile("./dump.json", JSON.stringify(data), "utf-8");
 
