@@ -8,8 +8,8 @@ const extractDateTime = (
   locationInfo: LocationInfo,
 ): DateTimeInfo => {
   // The exifr lib returns a Date or string
-  const dateTimeOriginal: string | Date | null =
-    rawExif.DateTimeOriginal ?? null;
+  const dateTimeOriginal: string | Date | null = rawExif.DateTimeOriginal ??
+    null;
 
   const offsetTimeOriginal =
     (rawExif.OffsetTimeOriginal as string | undefined) ?? null;
@@ -64,7 +64,7 @@ const _extractDateTimeFromString = (
 };
 
 /**
- * When exifr returns a date, it's incorrectly interprettd in the time zone of
+ * When exifr returns a date, it's incorrectly interpreted in the time zone of
  * the device. We correct it here.
  */
 const _extractDateTimeFromDate = (
