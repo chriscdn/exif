@@ -6,10 +6,23 @@ import {
   roundToSignificantDigits,
 } from "./utils";
 import { LocationInfo, RawExifData, SizeInfo, Source } from "./types";
+import arrify from "arrify";
 
-const extractDescription = (rawExif: RawExifData) => {
-  const imageDescription = rawExif.ImageDescription ?? null;
-  return imageDescription ? String(imageDescription).trim() : null;
+const extractTitle = (rawExif: RawExifData) => {
+  const title = rawExif.title?.value ?? rawExif.ObjectName ?? null;
+  return title ? String(title).trim() : null;
+};
+
+const extractCaption = (rawExif: RawExifData) => {
+  const caption = rawExif.description?.value ?? rawExif.ImageDescription ??
+    rawExif.Caption ?? null;
+  return caption ? String(caption).trim() : null;
+};
+
+const extractKeywords = (rawExif: RawExifData) => {
+  return arrify(
+    rawExif.Keywords ?? rawExif.subject ?? rawExif.weightedFlatSubject ?? [],
+  );
 };
 
 /**
@@ -20,22 +33,19 @@ const extractDescription = (rawExif: RawExifData) => {
  * @returns
  */
 const extractLatLngTz = (rawExif: RawExifData): LocationInfo => {
-  const latitude =
-    (rawExif.latitude as number) ??
+  const latitude = (rawExif.latitude as number) ??
     convertLatLonToDecimal(rawExif.GPSLatitude) ??
     null;
 
-  const longitude =
-    (rawExif.longitude as number) ??
+  const longitude = (rawExif.longitude as number) ??
     convertLatLonToDecimal(rawExif.GPSLongitude) ??
     null;
 
   // Use TZ service?
   // https://trackmytour.com/tapi/tz/-3/55/
-  const timeZone =
-    latitude !== null && longitude !== null
-      ? tzlookup(latitude, longitude)
-      : null;
+  const timeZone = latitude !== null && longitude !== null
+    ? tzlookup(latitude, longitude)
+    : null;
 
   // https://en.wikipedia.org/wiki/Decimal_degrees
   return {
@@ -56,10 +66,10 @@ const extractHeightWidth = async (
   rawExif: RawExifData,
   item: Source,
 ): Promise<SizeInfo> => {
-  let width =
-    (rawExif.ImageWidth as number) ?? (rawExif.ExifImageWidth as number) ?? 0;
-  let height =
-    (rawExif.ImageHeight as number) ?? (rawExif.ExifImageHeight as number) ?? 0;
+  let width = (rawExif.ImageWidth as number) ??
+    (rawExif.ExifImageWidth as number) ?? 0;
+  let height = (rawExif.ImageHeight as number) ??
+    (rawExif.ExifImageHeight as number) ?? 0;
 
   if (width > 0 && height > 0) {
     // great!
@@ -88,4 +98,10 @@ const extractHeightWidth = async (
   return { width, height };
 };
 
-export { extractDescription, extractLatLngTz, extractHeightWidth };
+export {
+  extractCaption,
+  extractHeightWidth,
+  extractKeywords,
+  extractLatLngTz,
+  extractTitle,
+};

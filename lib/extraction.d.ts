@@ -1,5 +1,7 @@
 import { LocationInfo, RawExifData, SizeInfo, Source } from "./types";
-declare const extractDescription: (rawExif: RawExifData) => string | null;
+declare const extractTitle: (rawExif: RawExifData) => string | null;
+declare const extractCaption: (rawExif: RawExifData) => string | null;
+declare const extractKeywords: (rawExif: RawExifData) => any;
 /**
  * Extracts the latitude, longitude, and time zone. The latitude and longitude
  * are rounded to 6 significant digits.
@@ -16,4 +18,4 @@ declare const extractLatLngTz: (rawExif: RawExifData) => LocationInfo;
  * @returns
  */
 declare const extractHeightWidth: (rawExif: RawExifData, item: Source) => Promise<SizeInfo>;
-export { extractDescription, extractLatLngTz, extractHeightWidth };
+export { extractCaption, extractHeightWidth, extractKeywords, extractLatLngTz, extractTitle, };

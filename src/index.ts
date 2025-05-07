@@ -1,9 +1,11 @@
 import pkg from "exifr";
 
 import {
-  extractDescription,
+  extractCaption,
   extractHeightWidth,
+  extractKeywords,
   extractLatLngTz,
+  extractTitle,
 } from "./extraction";
 
 import { type Source, type TExifData } from "./types";
@@ -18,22 +20,38 @@ const exif = async (item: Source): Promise<TExifData> => {
     timeZone: null,
     localTime: null,
     timestamp: null,
-    description: null,
+    title: null,
+    caption: null,
     width: 0,
     height: 0,
-    // isPrecise: false,
+
+    city: null,
+    state: null,
+    country: null,
+    countryCode: null,
+    rating: null,
+    mimetype: null,
+    keywords: [],
   };
 
   const data = await parse(item, true);
-
-  // fs.promises.writeFile("./dump.json", JSON.stringify(data), "utf-8");
 
   const locationInfo = extractLatLngTz(data);
 
   _exif.latitude = locationInfo.latitude;
   _exif.longitude = locationInfo.longitude;
   _exif.timeZone = locationInfo.timeZone;
-  _exif.description = extractDescription(data);
+  _exif.title = extractTitle(data);
+  _exif.caption = extractCaption(data);
+
+  _exif.city = data.City;
+  _exif.state = data.State;
+  _exif.country = data.Country;
+  _exif.countryCode = data.CountryCode;
+  _exif.rating = data.Rating;
+  _exif.mimetype = data.format;
+
+  _exif.keywords = extractKeywords(data);
 
   const dateTimeInfo = extractDateTime(data, locationInfo);
   _exif.localTime = dateTimeInfo.localTime;

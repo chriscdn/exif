@@ -1,6 +1,6 @@
 {
   "name": "@chriscdn/exif",
-  "version": "0.0.16",
+  "version": "0.0.18",
   "description": "Assist in extracting EXIF information from JPG, PNG, and HEIC photos.",
   "repository": "https://github.com/chriscdn/exif",
   "license": "MIT",
@@ -20,8 +20,9 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@chriscdn/format-date": "^0.0.22",
+    "@chriscdn/format-date": "^0.0.23",
     "@chriscdn/to-date": "^1.0.16",
+    "arrify": "^3.0.0",
     "exifr": "^7.1.3",
     "probe-image-size": "^7.2.3",
     "tz-lookup": "^6.1.25"
@@ -30,7 +31,7 @@
     "@types/probe-image-size": "^7.2.5",
     "@types/tz-lookup": "^6.1.0",
     "microbundle": "^0.15.1",
-    "vitest": "^3.1.1"
+    "vitest": "^3.1.3"
   },
   "files": [
     "/lib"

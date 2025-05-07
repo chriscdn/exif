@@ -17,9 +17,17 @@ export type TExifData = {
   timeZone: string | null;
   localTime: string | null; // e.g., 2023-01-01T09:45:64, relative to location
   timestamp: number | null; // in milliseconds
-  //   timeZoneOffsetInMinutes: number | null;
-  description: string | null;
+  title: string | null;
+  caption: string | null;
   width: number;
   height: number;
-  // isPrecise: boolean;
+
+  city: string | null;
+  state: string | null;
+  countryCode: string | null;
+  country: string | null;
+
+  rating: number | null;
+  mimetype: string | null;
+  keywords: string[];
 };
