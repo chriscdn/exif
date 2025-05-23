@@ -1,6 +1,6 @@
 {
   "name": "@chriscdn/exif",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Assist in extracting EXIF information from JPG, PNG, and HEIC photos.",
   "repository": "https://github.com/chriscdn/exif",
   "license": "MIT",
