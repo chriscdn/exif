@@ -25,6 +25,9 @@ const extractKeywords = (rawExif: RawExifData) => {
   );
 };
 
+const isValidNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
 /**
  * Extracts the latitude, longitude, and time zone. The latitude and longitude
  * are rounded to 6 significant digits.
@@ -43,7 +46,7 @@ const extractLatLngTz = (rawExif: RawExifData): LocationInfo => {
 
   // Use TZ service?
   // https://trackmytour.com/tapi/tz/-3/55/
-  const timeZone = latitude !== null && longitude !== null
+  const timeZone = isValidNumber(latitude) && isValidNumber(longitude)
     ? tzlookup(latitude, longitude)
     : null;
 
