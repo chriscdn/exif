@@ -28,6 +28,8 @@ const extractKeywords = (rawExif: RawExifData) => {
 const isValidNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);
 
+const isString = (value: unknown): value is string => typeof value === "string";
+
 /**
  * Extracts the latitude, longitude, and time zone. The latitude and longitude
  * are rounded to 6 significant digits.
@@ -36,6 +38,27 @@ const isValidNumber = (value: unknown): value is number =>
  * @returns
  */
 const extractLatLngTz = (rawExif: RawExifData): LocationInfo => {
+  // This can be NaN, number, or DMS
+
+  const rawLatitude = rawExif.latitude;
+  const rawLongitude = rawExif.longitude;
+
+  const rawGpsLatitude = rawExif.GPSLatitude;
+  const rawGpsLongitude = rawExif.GPSLongitude;
+
+  const latitude = isValidNumber(rawLatitude)
+    ? rawLatitude
+    : isString(rawGpsLatitude)
+    ? convertLatLonToDecimal(rawGpsLatitude)
+    : null;
+
+  const longitude = isValidNumber(rawLatitude)
+    ? rawLongitude
+    : isString(rawGpsLongitude)
+    ? convertLatLonToDecimal(rawGpsLongitude)
+    : null;
+
+  /*
   const latitude = (rawExif.latitude as number) ??
     convertLatLonToDecimal(rawExif.GPSLatitude) ??
     null;
@@ -43,6 +66,7 @@ const extractLatLngTz = (rawExif: RawExifData): LocationInfo => {
   const longitude = (rawExif.longitude as number) ??
     convertLatLonToDecimal(rawExif.GPSLongitude) ??
     null;
+    */
 
   // Use TZ service?
   // https://trackmytour.com/tapi/tz/-3/55/
