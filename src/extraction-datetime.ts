@@ -8,8 +8,8 @@ const extractDateTime = (
   locationInfo: LocationInfo,
 ): DateTimeInfo => {
   // The exifr lib returns a Date or string
-  const dateTimeOriginal: string | Date | null = rawExif.DateTimeOriginal ??
-    null;
+  const dateTimeOriginal: string | Date | null =
+    rawExif.DateTimeOriginal ?? null;
 
   const offsetTimeOriginal =
     (rawExif.OffsetTimeOriginal as string | undefined) ?? null;

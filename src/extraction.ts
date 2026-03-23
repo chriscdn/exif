@@ -1,12 +1,8 @@
 import tzlookup from "tz-lookup";
-import {
-  convertLatLonToDecimal,
-  getSizeInBrowser,
-  isFile,
-  roundToSignificantDigits,
-} from "./utils";
+import { convertLatLonToDecimal, getSizeInBrowser, isFile } from "./utils";
 import { LocationInfo, RawExifData, SizeInfo, Source } from "./types";
 import arrify from "arrify";
+import { isNumber, RoundingMode, toNumber } from "@chriscdn/to-number";
 
 const extractTitle = (rawExif: RawExifData) => {
   const title = rawExif.title?.value ?? rawExif.ObjectName ?? null;
@@ -14,19 +10,18 @@ const extractTitle = (rawExif: RawExifData) => {
 };
 
 const extractCaption = (rawExif: RawExifData) => {
-  const caption = rawExif.description?.value ?? rawExif.ImageDescription ??
-    rawExif.Caption ?? null;
+  const caption =
+    rawExif.description?.value ??
+    rawExif.ImageDescription ??
+    rawExif.Caption ??
+    null;
   return caption ? String(caption).trim() : null;
 };
 
-const extractKeywords = (rawExif: RawExifData) => {
-  return arrify(
+const extractKeywords = (rawExif: RawExifData) =>
+  arrify(
     rawExif.Keywords ?? rawExif.subject ?? rawExif.weightedFlatSubject ?? [],
   );
-};
-
-const isValidNumber = (value: unknown): value is number =>
-  typeof value === "number" && Number.isFinite(value);
 
 const isString = (value: unknown): value is string => typeof value === "string";
 
@@ -46,38 +41,33 @@ const extractLatLngTz = (rawExif: RawExifData): LocationInfo => {
   const rawGpsLatitude = rawExif.GPSLatitude;
   const rawGpsLongitude = rawExif.GPSLongitude;
 
-  const latitude = isValidNumber(rawLatitude)
+  const latitude = isNumber(rawLatitude)
     ? rawLatitude
     : isString(rawGpsLatitude)
-    ? convertLatLonToDecimal(rawGpsLatitude)
-    : null;
+      ? convertLatLonToDecimal(rawGpsLatitude)
+      : null;
 
-  const longitude = isValidNumber(rawLatitude)
+  const longitude = isNumber(rawLatitude)
     ? rawLongitude
     : isString(rawGpsLongitude)
-    ? convertLatLonToDecimal(rawGpsLongitude)
-    : null;
+      ? convertLatLonToDecimal(rawGpsLongitude)
+      : null;
 
-  /*
-  const latitude = (rawExif.latitude as number) ??
-    convertLatLonToDecimal(rawExif.GPSLatitude) ??
-    null;
-
-  const longitude = (rawExif.longitude as number) ??
-    convertLatLonToDecimal(rawExif.GPSLongitude) ??
-    null;
-    */
-
-  // Use TZ service?
-  // https://trackmytour.com/tapi/tz/-3/55/
-  const timeZone = isValidNumber(latitude) && isValidNumber(longitude)
-    ? tzlookup(latitude, longitude)
-    : null;
+  const timeZone =
+    isNumber(latitude) && isNumber(longitude)
+      ? tzlookup(latitude, longitude)
+      : null;
 
   // https://en.wikipedia.org/wiki/Decimal_degrees
   return {
-    latitude: roundToSignificantDigits(latitude, 6),
-    longitude: roundToSignificantDigits(longitude, 6),
+    latitude: toNumber(latitude, {
+      digits: 6,
+      roundingMode: RoundingMode.ROUND,
+    }),
+    longitude: toNumber(longitude, {
+      digits: 6,
+      roundingMode: RoundingMode.ROUND,
+    }),
     timeZone,
   };
 };
@@ -93,10 +83,11 @@ const extractHeightWidth = async (
   rawExif: RawExifData,
   item: Source,
 ): Promise<SizeInfo> => {
-  let width = (rawExif.ImageWidth as number) ??
-    (rawExif.ExifImageWidth as number) ?? 0;
-  let height = (rawExif.ImageHeight as number) ??
-    (rawExif.ExifImageHeight as number) ?? 0;
+  let width =
+    toNumber(rawExif.ImageWidth) ?? toNumber(rawExif.ExifImageWidth) ?? 0;
+
+  let height =
+    toNumber(rawExif.ImageHeight) ?? toNumber(rawExif.ExifImageHeight) ?? 0;
 
   if (width > 0 && height > 0) {
     // great!

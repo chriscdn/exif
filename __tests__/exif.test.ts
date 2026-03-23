@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { exif, type TExifData } from "../src/index";
-import { resolve } from "path";
 
-const metadata: Record<string, Partial<TExifData>> = {
+import { resolve } from "path";
+import { offsetStringToMinutes } from "../src/utils";
+
+import { exif, type ExifData } from "../src/index";
+// import { exif, type ExifData } from "../lib";
+
+const metadata: Record<string, Partial<ExifData>> = {
   cn_tower: {
     latitude: 43.642956,
     longitude: -79.383881,
@@ -40,11 +44,13 @@ describe("CN Tower - HEIC - Original File from Photos app", async () => {
   const data = await exif(image);
 
   it("Metadata Comparison", () => {
-    expect(data).toEqual(expect.objectContaining({
-      ...metadata.cn_tower,
-      width: 4032,
-      height: 3024,
-    }));
+    expect(data).toEqual(
+      expect.objectContaining({
+        ...metadata.cn_tower,
+        width: 4032,
+        height: 3024,
+      }),
+    );
   });
 });
 
@@ -53,9 +59,11 @@ describe("CN Tower - Lightroom Export - JPG - Full Metadata", async () => {
   const data = await exif(image);
 
   it("Metadata Comparison", () => {
-    expect(data).toEqual(expect.objectContaining({
-      ...metadata.cn_tower,
-    }));
+    expect(data).toEqual(
+      expect.objectContaining({
+        ...metadata.cn_tower,
+      }),
+    );
   });
 });
 
@@ -67,12 +75,14 @@ describe("CN Tower - Lightroom Export - JPG - Full Metadata - No Location", asyn
   const data = await exif(image);
 
   it("Metadata Comparison", () => {
-    expect(data).toEqual(expect.objectContaining({
-      ...metadata.cn_tower,
-      latitude: null,
-      longitude: null,
-      timeZone: null,
-    }));
+    expect(data).toEqual(
+      expect.objectContaining({
+        ...metadata.cn_tower,
+        latitude: null,
+        longitude: null,
+        timeZone: null,
+      }),
+    );
   });
 });
 
@@ -81,15 +91,17 @@ describe("CN Tower - Lightroom Export - JPG - No Metadata", async () => {
   const data = await exif(image);
 
   it("Metadata Comparison", () => {
-    expect(data).toEqual(expect.objectContaining({
-      ...metadata.cn_tower,
-      latitude: null,
-      longitude: null,
-      timeZone: null,
-      localTime: null,
-      timestamp: null,
-      caption: null,
-    }));
+    expect(data).toEqual(
+      expect.objectContaining({
+        ...metadata.cn_tower,
+        latitude: null,
+        longitude: null,
+        timeZone: null,
+        localTime: null,
+        timestamp: null,
+        caption: null,
+      }),
+    );
   });
 });
 
@@ -112,12 +124,14 @@ describe("CN Tower - Lightroom Export - PNG - Full Metadata - No Location", asyn
   const data = await exif(image);
 
   it("Metadata Comparison", () => {
-    expect(data).toEqual(expect.objectContaining({
-      ...metadata.cn_tower,
-      latitude: null,
-      longitude: null,
-      timeZone: null,
-    }));
+    expect(data).toEqual(
+      expect.objectContaining({
+        ...metadata.cn_tower,
+        latitude: null,
+        longitude: null,
+        timeZone: null,
+      }),
+    );
   });
 });
 
@@ -126,15 +140,17 @@ describe("CN Tower - Lightroom Export - PNG - No Metadata", async () => {
   const data = await exif(image);
 
   it("Metadata Comparison", () => {
-    expect(data).toEqual(expect.objectContaining({
-      ...metadata.cn_tower,
-      latitude: null,
-      longitude: null,
-      timeZone: null,
-      localTime: null,
-      timestamp: null,
-      caption: null,
-    }));
+    expect(data).toEqual(
+      expect.objectContaining({
+        ...metadata.cn_tower,
+        latitude: null,
+        longitude: null,
+        timeZone: null,
+        localTime: null,
+        timestamp: null,
+        caption: null,
+      }),
+    );
   });
 });
 
@@ -143,9 +159,11 @@ describe("London Tower Bridge - Fujfilm JPG", async () => {
   const data = await exif(image);
 
   it("Metadata Comparison", () => {
-    expect(data).toEqual(expect.objectContaining({
-      ...metadata.tower_bridge,
-    }));
+    expect(data).toEqual(
+      expect.objectContaining({
+        ...metadata.tower_bridge,
+      }),
+    );
   });
 });
 
@@ -154,9 +172,11 @@ describe("Luzern Train Station - iPhone 4 JPG", async () => {
   const data = await exif(image);
 
   it("Metadata Comparison", () => {
-    expect(data).toEqual(expect.objectContaining({
-      ...metadata.train_station,
-    }));
+    expect(data).toEqual(
+      expect.objectContaining({
+        ...metadata.train_station,
+      }),
+    );
   });
 });
 
@@ -165,15 +185,33 @@ describe("iPhone 13mini Screenshot", async () => {
   const data = await exif(image);
 
   it("Metadata Comparison", () => {
-    expect(data).toEqual(expect.objectContaining({
-      latitude: null,
-      longitude: null,
-      localTime: "2025-03-16T11:57:13",
-      timestamp: null,
-      caption: null,
-      timeZone: null,
-      height: 2436,
-      width: 1125,
-    }));
+    expect(data).toEqual(
+      expect.objectContaining({
+        latitude: null,
+        longitude: null,
+        localTime: "2025-03-16T11:57:13",
+        timestamp: null,
+        caption: null,
+        timeZone: null,
+        height: 2436,
+        width: 1125,
+      }),
+    );
+  });
+});
+
+describe("offsetStringToMinutes", () => {
+  const tests: Array<[string, number]> = [
+    ["+02:00", 120],
+    ["-02:00", -120],
+    ["+00:00", 0],
+    ["+00:30", 30],
+    ["-00:30", -30],
+  ];
+
+  tests.forEach((test) => {
+    it(test[0], () => {
+      expect(offsetStringToMinutes(test[0])).toBe(test[1]);
+    });
   });
 });

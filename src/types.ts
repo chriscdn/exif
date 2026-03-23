@@ -1,17 +1,14 @@
-export type Source = File | string;
+type Source = File | string;
 
-export type RawExifData = any;
+type RawExifData = any;
 
-export type LocationInfo = Pick<
-  TExifData,
-  "latitude" | "longitude" | "timeZone"
->;
+type LocationInfo = Pick<ExifData, "latitude" | "longitude" | "timeZone">;
 
-export type SizeInfo = Pick<TExifData, "width" | "height">;
+type SizeInfo = Pick<ExifData, "width" | "height">;
 
-export type DateTimeInfo = Pick<TExifData, "localTime" | "timestamp">;
+type DateTimeInfo = Pick<ExifData, "localTime" | "timestamp">;
 
-export type TExifData = {
+type ExifData = {
   latitude: number | null;
   longitude: number | null;
   timeZone: string | null;
@@ -30,4 +27,13 @@ export type TExifData = {
   rating: number | null;
   mimetype: string | null;
   keywords: string[];
+};
+
+export type {
+  Source,
+  RawExifData,
+  LocationInfo,
+  SizeInfo,
+  DateTimeInfo,
+  ExifData,
 };

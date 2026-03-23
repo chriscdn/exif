@@ -1,4 +1,4 @@
-import pkg from "exifr";
+import { parse } from "exifr";
 
 import {
   extractCaption,
@@ -8,13 +8,11 @@ import {
   extractTitle,
 } from "./extraction";
 
-import { type Source, type TExifData } from "./types";
+import { type ExifData, type Source } from "./types";
 import { extractDateTime } from "./extraction-datetime";
 
-const { parse } = pkg;
-
-const exif = async (item: Source): Promise<TExifData> => {
-  const _exif: TExifData = {
+const exif = async (item: Source): Promise<ExifData> => {
+  const _exif: ExifData = {
     latitude: null,
     longitude: null,
     timeZone: null,
@@ -24,7 +22,6 @@ const exif = async (item: Source): Promise<TExifData> => {
     caption: null,
     width: 0,
     height: 0,
-
     city: null,
     state: null,
     country: null,
@@ -64,4 +61,4 @@ const exif = async (item: Source): Promise<TExifData> => {
   return _exif;
 };
 
-export { exif, type TExifData };
+export { exif, type ExifData };
