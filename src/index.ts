@@ -8,7 +8,8 @@ import {
   extractTitle,
 } from "./extraction";
 
-import { type ExifData, type Source } from "./types";
+import type { ExifData, Source } from "./types";
+
 import { extractDateTime } from "./extraction-datetime";
 
 const exif = async (item: Source): Promise<ExifData> => {

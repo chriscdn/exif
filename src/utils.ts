@@ -1,7 +1,7 @@
 import { toIntegerOrThrow, toNumberOrThrow } from "@chriscdn/to-number";
 
-// TS type guard
 const isFile = (e: File | string): e is File => typeof e !== "string";
+const isString = (value: unknown): value is string => typeof value === "string";
 
 /**
  * A browser function for getting the width and height of an image.
@@ -50,6 +50,7 @@ const convertLatLonToDecimal = (
 
   if (match) {
     const [_, degreesStr, minutesStr, hemisphere] = match;
+
     const degrees = toIntegerOrThrow(degreesStr);
     const minutes = toNumberOrThrow(minutesStr);
 
@@ -67,21 +68,10 @@ const convertLatLonToDecimal = (
   }
 };
 
-// const roundToSignificantDigits = (
-//   value: number | null | undefined,
-//   n: number,
-// ): number | null => {
-//   if (typeof value === "number") {
-//     const multiplier = Math.pow(10, n);
-//     return Math.round(value * multiplier) / multiplier;
-//   } else {
-//     return null;
-//   }
-// };
-
 export {
   convertLatLonToDecimal,
   getSizeInBrowser,
   isFile,
+  isString,
   offsetStringToMinutes,
 };

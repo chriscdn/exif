@@ -17,15 +17,14 @@
     "@chriscdn/format-date": "^2.0.1",
     "@chriscdn/to-date": "^2.0.1",
     "@chriscdn/to-number": "^2.0.2",
+    "@photostructure/tz-lookup": "^11.5.0",
     "arrify": "^3.0.0",
     "exifr": "^7.1.3",
-    "probe-image-size": "^7.2.3",
-    "tz-lookup": "^6.1.25"
+    "probe-image-size": "^7.2.3"
   },
   "devDependencies": {
-    "@types/probe-image-size": "^7.2.5",
-    "@types/tz-lookup": "^6.1.0",
     "@tsconfig/strictest": "^2.0.8",
+    "@types/probe-image-size": "^7.2.5",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.0"

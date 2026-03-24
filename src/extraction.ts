@@ -1,8 +1,16 @@
-import tzlookup from "tz-lookup";
-import { convertLatLonToDecimal, getSizeInBrowser, isFile } from "./utils";
-import { LocationInfo, RawExifData, SizeInfo, Source } from "./types";
+// https://github.com/photostructure/tz-lookup
+import tzlookup from "@photostructure/tz-lookup";
 import arrify from "arrify";
 import { isNumber, RoundingMode, toNumber } from "@chriscdn/to-number";
+
+import {
+  convertLatLonToDecimal,
+  getSizeInBrowser,
+  isFile,
+  isString,
+} from "./utils";
+
+import { LocationInfo, RawExifData, SizeInfo, Source } from "./types";
 
 const extractTitle = (rawExif: RawExifData) => {
   const title = rawExif.title?.value ?? rawExif.ObjectName ?? null;
@@ -15,6 +23,7 @@ const extractCaption = (rawExif: RawExifData) => {
     rawExif.ImageDescription ??
     rawExif.Caption ??
     null;
+
   return caption ? String(caption).trim() : null;
 };
 
@@ -23,11 +32,9 @@ const extractKeywords = (rawExif: RawExifData) =>
     rawExif.Keywords ?? rawExif.subject ?? rawExif.weightedFlatSubject ?? [],
   );
 
-const isString = (value: unknown): value is string => typeof value === "string";
-
 /**
  * Extracts the latitude, longitude, and time zone. The latitude and longitude
- * are rounded to 6 significant digits.
+ * are rounded to 6 digits.
  *
  * @param rawExif
  * @returns
@@ -91,26 +98,27 @@ const extractHeightWidth = async (
 
   if (width > 0 && height > 0) {
     // great!
-  } else {
+  } else if (isString(item)) {
     // if we have a file path, on node.js
-    if (typeof item === "string") {
-      // This block is for node.js only.
-      const { default: probe } = await import("probe-image-size");
-      const fs = await import("fs");
-      const results = await probe(fs.createReadStream(item));
+    // This block is for node.js only.
+    const [{ default: probe }, fs] = await Promise.all([
+      import("probe-image-size"),
+      import("fs"),
+    ]);
 
-      if (results?.width && results?.height) {
-        width = results.width;
-        height = results.height;
-      }
-    } else if (window && isFile(item)) {
-      const results = await getSizeInBrowser(item);
+    const results = await probe(fs.createReadStream(item));
 
+    if (results?.width && results?.height) {
       width = results.width;
       height = results.height;
-    } else {
-      // out of luck
     }
+  } else if (window && isFile(item)) {
+    const results = await getSizeInBrowser(item);
+
+    width = results.width;
+    height = results.height;
+  } else {
+    // out of luck
   }
 
   return { width, height };

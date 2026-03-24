@@ -1,4 +1,4 @@
-import { offsetStringToMinutes } from "./utils";
+import { isString, offsetStringToMinutes } from "./utils";
 import { isDate, toDate, toDateInTimeZone, toDateUTC } from "@chriscdn/to-date";
 import { formatDateYYYYMMDDTHHMMSS } from "@chriscdn/format-date";
 import { DateTimeInfo, LocationInfo, RawExifData } from "./types";
@@ -14,7 +14,7 @@ const extractDateTime = (
   const offsetTimeOriginal =
     (rawExif.OffsetTimeOriginal as string | undefined) ?? null;
 
-  if (typeof dateTimeOriginal === "string") {
+  if (isString(dateTimeOriginal)) {
     // PNGs seem to go this way
     return _extractDateTimeFromString(dateTimeOriginal, locationInfo);
   } else if (isDate(dateTimeOriginal)) {

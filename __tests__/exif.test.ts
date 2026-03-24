@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-
 import { resolve } from "path";
 import { offsetStringToMinutes } from "../src/utils";
 
