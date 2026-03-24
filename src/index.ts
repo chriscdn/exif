@@ -1,4 +1,6 @@
-import { parse } from "exifr";
+import pkg from "exifr";
+
+const { parse } = pkg;
 
 import {
   extractCaption,
