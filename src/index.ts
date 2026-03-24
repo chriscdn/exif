@@ -1,3 +1,4 @@
+// The import must be like this.
 import pkg from "exifr";
 
 const { parse } = pkg;
