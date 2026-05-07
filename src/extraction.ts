@@ -11,6 +11,7 @@ import {
 } from "./utils";
 
 import { LocationInfo, RawExifData, SizeInfo, Source } from "./types";
+import { nodeProbeImageSize } from "./node-image-size";
 
 const extractTitle = (rawExif: RawExifData) => {
   const title = rawExif.title?.value ?? rawExif.ObjectName ?? null;
@@ -101,17 +102,19 @@ const extractHeightWidth = async (
   } else if (isString(item)) {
     // if we have a file path, on node.js
     // This block is for node.js only.
-    const [{ default: probe }, fs] = await Promise.all([
-      import("probe-image-size"),
-      import("fs"),
-    ]);
+    // const [{ default: probe }, fs] = await Promise.all([
+    //   import("probe-image-size"),
+    //   import("node:fs"),
+    // ]);
 
-    const results = await probe(fs.createReadStream(item));
+    //  const results = await probe(fs.createReadStream(item));
 
-    if (results?.width && results?.height) {
-      width = results.width;
-      height = results.height;
-    }
+    const { nodeProbeImageSize } = await import("./node-image-size");
+
+    const results = await nodeProbeImageSize(item);
+
+    width = results.width;
+    height = results.height;
   } else if (window && isFile(item)) {
     const results = await getSizeInBrowser(item);
 
