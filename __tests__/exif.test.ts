@@ -3,7 +3,6 @@ import { resolve } from "path";
 import { offsetStringToMinutes } from "../src/utils";
 
 import { exif, type ExifData } from "../src/index";
-// import { exif, type ExifData } from "../lib";
 
 const metadata: Record<string, Partial<ExifData>> = {
   cn_tower: {
@@ -11,6 +10,7 @@ const metadata: Record<string, Partial<ExifData>> = {
     longitude: -79.383881,
     timeZone: "America/Toronto",
     localTime: "2024-12-21T18:59:43",
+    localDate: "2024-12-21",
     timestamp: 1734825583000,
     caption: null,
     width: 225,
@@ -20,6 +20,7 @@ const metadata: Record<string, Partial<ExifData>> = {
     latitude: 51.508417,
     longitude: -0.078391,
     localTime: "2024-10-08T09:19:54",
+    localDate: "2024-10-08",
     caption: null,
     timeZone: "Europe/London",
     timestamp: 1728375594000,
@@ -30,6 +31,7 @@ const metadata: Record<string, Partial<ExifData>> = {
     latitude: 47.049833,
     longitude: 8.31,
     localTime: "2013-08-29T20:12:59",
+    localDate: "2013-08-29",
     caption: null,
     timeZone: "Europe/Zurich",
     timestamp: 1377799979000,
@@ -97,6 +99,7 @@ describe("CN Tower - Lightroom Export - JPG - No Metadata", async () => {
         longitude: null,
         timeZone: null,
         localTime: null,
+        localDate: null,
         timestamp: null,
         caption: null,
       }),
@@ -146,6 +149,7 @@ describe("CN Tower - Lightroom Export - PNG - No Metadata", async () => {
         longitude: null,
         timeZone: null,
         localTime: null,
+        localDate: null,
         timestamp: null,
         caption: null,
       }),

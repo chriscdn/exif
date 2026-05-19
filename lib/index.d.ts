@@ -3,6 +3,7 @@ type ExifData = {
     latitude: number | null;
     longitude: number | null;
     timeZone: string | null;
+    localDate: string | null;
     localTime: string | null;
     timestamp: number | null;
     title: string | null;

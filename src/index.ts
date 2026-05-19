@@ -20,6 +20,7 @@ const exif = async (item: Source): Promise<ExifData> => {
     latitude: null,
     longitude: null,
     timeZone: null,
+    localDate: null,
     localTime: null,
     timestamp: null,
     title: null,
@@ -42,6 +43,7 @@ const exif = async (item: Source): Promise<ExifData> => {
   _exif.latitude = locationInfo.latitude;
   _exif.longitude = locationInfo.longitude;
   _exif.timeZone = locationInfo.timeZone;
+
   _exif.title = extractTitle(data);
   _exif.caption = extractCaption(data);
 
@@ -57,6 +59,7 @@ const exif = async (item: Source): Promise<ExifData> => {
   const dateTimeInfo = extractDateTime(data, locationInfo);
   _exif.localTime = dateTimeInfo.localTime;
   _exif.timestamp = dateTimeInfo.timestamp;
+  _exif.localDate = dateTimeInfo.localDate;
 
   const dimensionInfo = await extractHeightWidth(data, item);
   _exif.width = dimensionInfo.width;

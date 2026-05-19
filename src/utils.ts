@@ -37,8 +37,10 @@ const offsetStringToMinutes = (offset: string): number => {
   const sign = offset.startsWith("-") ? -1 : 1;
   const [h, m] = offset.replace(/^[-+]/, "").split(":");
 
-  const hours = toIntegerOrThrow(h);
-  const minutes = toIntegerOrThrow(m);
+  const isUTC = h === "Z";
+
+  const hours = isUTC ? 0 : toIntegerOrThrow(h);
+  const minutes = isUTC ? 0 : toIntegerOrThrow(m);
 
   return sign * (hours * 60 + minutes);
 };

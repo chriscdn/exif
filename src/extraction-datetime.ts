@@ -31,11 +31,15 @@ const extractDateTime = (
   } else {
     // null case
     return {
+      localDate: null,
       localTime: null,
       timestamp: null,
     };
   }
 };
+
+const _extractLocalDateFromLocalTime = (localTime: string | null) =>
+  localTime?.split("T")[0] ?? null;
 
 /**
  * Exifr appears to return the DateTimeOriginal as a string with a time zone,
@@ -50,14 +54,21 @@ const _extractDateTimeFromString = (
   const correctDate = toDate(dateTimeOriginal);
 
   if (locationInfo.timeZone) {
+    const localTime = formatDateYYYYMMDDTHHMMSS(
+      correctDate,
+      locationInfo.timeZone,
+    );
     return {
-      localTime: formatDateYYYYMMDDTHHMMSS(correctDate, locationInfo.timeZone),
+      localTime,
+      localDate: _extractLocalDateFromLocalTime(localTime),
       timestamp: correctDate?.getTime() ?? null,
     };
   } else {
+    const localTime = dateTimeOriginal.slice(0, 19);
     return {
       // We want the *local time* for consistency, which we can get from dateTimeOriginal
-      localTime: dateTimeOriginal.slice(0, 19),
+      localTime,
+      localDate: _extractLocalDateFromLocalTime(localTime),
       timestamp: correctDate?.getTime() ?? null,
     };
   }
@@ -75,9 +86,7 @@ const _extractDateTimeFromDate = (
   // parsed in device tz, so we format it back in same tz
   const localDateAsString = formatDateYYYYMMDDTHHMMSS(dateTimeOriginal);
 
-  // console.log(
-  //   `${localDateAsString} - ${offsetInMinutes} - ${locationInfo.timeZone}`,
-  // );
+  const localDate = _extractLocalDateFromLocalTime(localDateAsString);
 
   if (offsetInMinutes !== null) {
     const utcDate = toDateUTC(localDateAsString);
@@ -89,6 +98,7 @@ const _extractDateTimeFromDate = (
     return {
       localTime: localDateAsString,
       timestamp: utcDate?.getTime() ?? null,
+      localDate,
     };
   } else if (locationInfo.timeZone) {
     const fixedDate = toDateInTimeZone(
@@ -99,12 +109,13 @@ const _extractDateTimeFromDate = (
     return {
       localTime: localDateAsString,
       timestamp: fixedDate?.getTime() ?? null,
-      // timeZoneOffsetInMinutes: null,
+      localDate,
     };
   } else {
     return {
       localTime: localDateAsString,
       timestamp: null,
+      localDate,
     };
   }
 };
