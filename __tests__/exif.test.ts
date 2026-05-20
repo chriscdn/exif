@@ -210,11 +210,22 @@ describe("offsetStringToMinutes", () => {
     ["+00:00", 0],
     ["+00:30", 30],
     ["-00:30", -30],
+    ["Z", 0],
   ];
 
   tests.forEach((test) => {
     it(test[0], () => {
       expect(offsetStringToMinutes(test[0])).toBe(test[1]);
     });
+  });
+});
+
+describe("UTC", async () => {
+  const image = resolve(__dirname, "./assets/speakers_corner.jpg");
+  const data = await exif(image);
+
+  it("UTC based JPG", () => {
+    expect(data.timestamp).toBe(1233492040000);
+    expect(data.localTime).toBe("2009-02-01T12:40:40");
   });
 });

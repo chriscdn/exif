@@ -14,7 +14,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@chriscdn/format-date": "^2.0.2",
+    "@chriscdn/format-date": "^2.0.3",
     "@chriscdn/to-date": "^2.0.2",
     "@chriscdn/to-number": "^2.1.0",
     "@photostructure/tz-lookup": "^11.5.0",
