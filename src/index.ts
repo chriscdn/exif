@@ -4,13 +4,13 @@ import {
   extractCaption,
   extractHeightWidth,
   extractKeywords,
-  extractLatLngTz,
   extractTitle,
 } from "./extraction";
 
 import type { ExifData, Source } from "./types";
 import { extractDateTime } from "./extraction-datetime";
 import { toNumber } from "@chriscdn/to-number";
+import { extractLatLngTz } from "./extraction-location";
 
 const exif = async (item: Source): Promise<ExifData> => {
   const _exif: ExifData = {
@@ -37,7 +37,7 @@ const exif = async (item: Source): Promise<ExifData> => {
 
   const exifReaderTags = await ExifReader.load(item);
 
-  console.log(JSON.stringify(exifReaderTags));
+  // console.log(JSON.stringify(exifReaderTags));
 
   const locationInfo = extractLatLngTz(exifReaderTags);
 
