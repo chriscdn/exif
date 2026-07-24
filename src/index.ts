@@ -1,7 +1,4 @@
-// The import must be like this.
-import pkg from "exifr";
-
-const { parse } = pkg;
+import ExifReader from "exifreader";
 
 import {
   extractCaption,
@@ -12,8 +9,8 @@ import {
 } from "./extraction";
 
 import type { ExifData, Source } from "./types";
-
 import { extractDateTime } from "./extraction-datetime";
+import { toNumber } from "@chriscdn/to-number";
 
 const exif = async (item: Source): Promise<ExifData> => {
   const _exif: ExifData = {
@@ -29,6 +26,8 @@ const exif = async (item: Source): Promise<ExifData> => {
     height: 0,
     city: null,
     state: null,
+    location: null,
+    subLocation: null,
     country: null,
     countryCode: null,
     rating: null,
@@ -36,32 +35,43 @@ const exif = async (item: Source): Promise<ExifData> => {
     keywords: [],
   };
 
-  const data = await parse(item, true);
+  const exifReaderTags = await ExifReader.load(item);
 
-  const locationInfo = extractLatLngTz(data);
+  console.log(JSON.stringify(exifReaderTags));
+
+  const locationInfo = extractLatLngTz(exifReaderTags);
 
   _exif.latitude = locationInfo.latitude;
   _exif.longitude = locationInfo.longitude;
   _exif.timeZone = locationInfo.timeZone;
 
-  _exif.title = extractTitle(data);
-  _exif.caption = extractCaption(data);
+  _exif.title = extractTitle(exifReaderTags);
+  _exif.caption = extractCaption(exifReaderTags);
 
-  _exif.city = data.City;
-  _exif.state = data.State;
-  _exif.country = data.Country;
-  _exif.countryCode = data.CountryCode;
-  _exif.rating = data.Rating;
-  _exif.mimetype = data.format;
+  _exif.city = exifReaderTags["City"]?.description ?? null;
+  _exif.state = exifReaderTags["Province/State"]?.description ?? null;
+  _exif.location = exifReaderTags["Location"]?.description ?? null;
+  _exif.subLocation = exifReaderTags["Sub-location"]?.description ?? null;
 
-  _exif.keywords = extractKeywords(data);
+  _exif.countryCode =
+    exifReaderTags["Country/Primary Location Code"]?.description ?? null;
+  _exif.country =
+    exifReaderTags["Country/Primary Location Name"]?.description ?? null;
 
-  const dateTimeInfo = extractDateTime(data, locationInfo);
+  _exif.mimetype = exifReaderTags["format"]?.description ?? null;
+
+  _exif.rating = toNumber(exifReaderTags["Rating"]?.value);
+
+  _exif.keywords = extractKeywords(exifReaderTags);
+
+  // console.log(JSON.stringify(exifReaderTags));
+
+  const dateTimeInfo = extractDateTime(exifReaderTags, locationInfo.timeZone);
+  _exif.localDate = dateTimeInfo.localDate;
   _exif.localTime = dateTimeInfo.localTime;
   _exif.timestamp = dateTimeInfo.timestamp;
-  _exif.localDate = dateTimeInfo.localDate;
 
-  const dimensionInfo = await extractHeightWidth(data, item);
+  const dimensionInfo = await extractHeightWidth(exifReaderTags, item);
   _exif.width = dimensionInfo.width;
   _exif.height = dimensionInfo.height;
 

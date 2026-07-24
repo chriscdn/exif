@@ -1,36 +1,60 @@
 // https://github.com/photostructure/tz-lookup
 import tzlookup from "@photostructure/tz-lookup";
 import arrify from "arrify";
-import { isNumber, RoundingMode, toNumber } from "@chriscdn/to-number";
-
 import {
-  convertLatLonToDecimal,
-  getSizeInBrowser,
-  isFile,
-  isString,
-} from "./utils";
+  isNumber,
+  RoundingMode,
+  toNumber,
+  toNumberOrThrow,
+} from "@chriscdn/to-number";
 
-import { LocationInfo, RawExifData, SizeInfo, Source } from "./types";
+import { getSizeInBrowser, isFile, isString } from "./utils";
+import { LocationInfo, SizeInfo, Source } from "./types";
 
-const extractTitle = (rawExif: RawExifData) => {
-  const title = rawExif.title?.value ?? rawExif.ObjectName ?? null;
+const extractTitle = (exifReaderTags: ExifReader.Tags) => {
+  const title =
+    exifReaderTags["title"]?.description ??
+    exifReaderTags["Object Name"]?.description ??
+    exifReaderTags["XPTitle"]?.description;
+
   return title ? String(title).trim() : null;
 };
 
-const extractCaption = (rawExif: RawExifData) => {
+const extractCaption = (exifReaderTags: ExifReader.Tags) => {
   const caption =
-    rawExif.description?.value ??
-    rawExif.ImageDescription ??
-    rawExif.Caption ??
-    null;
+    exifReaderTags["description"]?.description ??
+    exifReaderTags["ImageDescription"]?.description ??
+    exifReaderTags["Caption/Abstract"]?.description;
 
   return caption ? String(caption).trim() : null;
 };
 
-const extractKeywords = (rawExif: RawExifData) =>
-  arrify(
-    rawExif.Keywords ?? rawExif.subject ?? rawExif.weightedFlatSubject ?? [],
-  );
+const extractKeywords = (exifReaderTags: ExifReader.Tags): string[] => {
+  return [
+    ...new Set(
+      [
+        ...arrify(exifReaderTags["subject"]),
+        ...arrify(exifReaderTags["Keywords"]),
+        ...arrify(exifReaderTags["XPKeywords"]),
+      ]
+        // Filter out null or undefined tag entries up front
+        .filter(Boolean)
+        // Normalize objects and strings into a flat string array
+        .map((item) =>
+          typeof item === "object" ? item.description || "" : item,
+        )
+        // Split comma/semicolon delimited blocks (common in legacy IPTC/Windows tags)
+        .flatMap((text) => text.split(/[;,]+/))
+        // Clean up whitespace and normalize casing
+        .map((token) => token.trim().toLowerCase())
+        // Remove empty strings created by the splitting process
+        .filter(Boolean),
+    ),
+  ];
+};
+// arrify(
+//   rawExif.Keywords ?? rawExif.subject ?? rawExif.weightedFlatSubject ?? [],
+// );
 
 /**
  * Extracts the latitude, longitude, and time zone. The latitude and longitude
@@ -39,62 +63,142 @@ const extractKeywords = (rawExif: RawExifData) =>
  * @param rawExif
  * @returns
  */
-const extractLatLngTz = (rawExif: RawExifData): LocationInfo => {
-  // This can be NaN, number, or DMS
 
-  const rawLatitude = rawExif.latitude;
-  const rawLongitude = rawExif.longitude;
+// const _extractNorthSouth = (exifReaderTags: ExifReader.Tags) => {
+//   const ns = arrify(exifReaderTags["GPSLatitudeRef"]?.value)[0];
 
-  const rawGpsLatitude = rawExif.GPSLatitude;
-  const rawGpsLongitude = rawExif.GPSLongitude;
+//   if (ns) {
+//     return String(ns);
+//   } else {
+//     const latString = exifReaderTags["GPSLatitude"]?.description;
 
-  const latitude = isNumber(rawLatitude)
-    ? rawLatitude
-    : isString(rawGpsLatitude)
-      ? convertLatLonToDecimal(rawGpsLatitude)
-      : null;
+//     if (latString) {
+//       const lastChar = latString[latString.length - 1];
 
-  const longitude = isNumber(rawLatitude)
-    ? rawLongitude
-    : isString(rawGpsLongitude)
-      ? convertLatLonToDecimal(rawGpsLongitude)
-      : null;
+//       if (lastChar && ["N", "S"].includes(lastChar)) {
+//         return lastChar;
+//       }
+//     }
+//   }
+//   return null;
+// };
 
-  const timeZone =
-    isNumber(latitude) && isNumber(longitude)
-      ? tzlookup(latitude, longitude)
-      : null;
+/**
+ * The latitude and longitude can appear in different ways. Either, GPSLatitude
+ * & GPSLongitude where the hemispheres (N, W, S, E) as a  suffix on the
+ * coordinates, or is in a separate GPSLatitudeRef and GPSLongitudeRef fields.
+ * This block handles both cases.
+ *
+ * @param exifReaderTags
+ * @returns
+ */
+const extractLatLngTz = (exifReaderTags: ExifReader.Tags): LocationInfo => {
+  // latString can actually be a number as well
 
-  // https://en.wikipedia.org/wiki/Decimal_degrees
+  let latString = exifReaderTags["GPSLatitude"]?.description as
+    | string
+    | number
+    | undefined;
+
+  let lonString = exifReaderTags["GPSLongitude"]?.description as
+    | string
+    | number
+    | undefined;
+
+  if (latString && lonString) {
+    let northOrSouth: "N" | "S" | null = null;
+    let westOrEast: "W" | "E" | null = null;
+
+    if (
+      isString(latString) &&
+      (latString.endsWith("N") || latString.endsWith("S"))
+    ) {
+      // case "43.642956N"
+      northOrSouth = latString[latString.length - 1] as "N" | "S";
+      latString = latString.slice(0, -1);
+    } else {
+      // check if hemisphere defined in GPSLatitudeRef field
+      const gpsLatitudeRef = arrify(exifReaderTags["GPSLatitudeRef"]?.value)[0];
+
+      if (gpsLatitudeRef === "N" || gpsLatitudeRef === "S") {
+        northOrSouth = gpsLatitudeRef;
+      }
+    }
+
+    if (
+      isString(lonString) &&
+      (lonString.endsWith("W") || lonString.endsWith("E"))
+    ) {
+      westOrEast = lonString[lonString.length - 1] as "W" | "E";
+      lonString = lonString.slice(0, -1);
+    } else {
+      const gpsLongitudeRef = arrify(
+        exifReaderTags["GPSLongitudeRef"]?.value,
+      )[0];
+
+      if (gpsLongitudeRef === "W" || gpsLongitudeRef === "E") {
+        westOrEast = gpsLongitudeRef;
+      }
+    }
+
+    const latNumber = toNumber(latString, {
+      digits: 6,
+      roundingMode: RoundingMode.ROUND,
+    });
+
+    const lonNumber = toNumber(lonString, {
+      digits: 6,
+      roundingMode: RoundingMode.ROUND,
+    });
+
+    if (
+      isNumber(latNumber) &&
+      isNumber(lonNumber) &&
+      isString(northOrSouth) &&
+      isString(westOrEast)
+    ) {
+      const isSouthernHemsiphere = northOrSouth === "S";
+      const isWesternHemisphere = westOrEast === "W";
+
+      const latitudeFactor = isSouthernHemsiphere ? -1 : 1;
+      const longitudeFactor = isWesternHemisphere ? -1 : 1;
+
+      const latitude = latitudeFactor * latNumber;
+      const longitude = longitudeFactor * lonNumber;
+
+      const timeZone =
+        isNumber(latitude) && isNumber(longitude)
+          ? tzlookup(latitude, longitude)
+          : null;
+
+      // https://en.wikipedia.org/wiki/Decimal_degrees
+      return {
+        latitude,
+        longitude,
+        timeZone,
+      };
+    }
+  }
+
   return {
-    latitude: toNumber(latitude, {
-      digits: 6,
-      roundingMode: RoundingMode.ROUND,
-    }),
-    longitude: toNumber(longitude, {
-      digits: 6,
-      roundingMode: RoundingMode.ROUND,
-    }),
-    timeZone,
+    latitude: null,
+    longitude: null,
+    timeZone: null,
   };
 };
 
 /**
- * Seems .jpg files exported from Lightroom does not contain width and height information.
  *
- * @param rawExif
+ * @param exifReaderTags {ExifReader.Tags}
  * @param item
  * @returns
  */
 const extractHeightWidth = async (
-  rawExif: RawExifData,
+  exifReaderTags: ExifReader.Tags,
   item: Source,
 ): Promise<SizeInfo> => {
-  let width =
-    toNumber(rawExif.ImageWidth) ?? toNumber(rawExif.ExifImageWidth) ?? 0;
-
-  let height =
-    toNumber(rawExif.ImageHeight) ?? toNumber(rawExif.ExifImageHeight) ?? 0;
+  let width = exifReaderTags["Image Width"]?.value ?? 0;
+  let height = exifReaderTags["Image Height"]?.value ?? 0;
 
   if (width > 0 && height > 0) {
     // great!

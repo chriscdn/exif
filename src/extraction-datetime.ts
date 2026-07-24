@@ -1,35 +1,91 @@
-import { isString, offsetStringToMinutes } from "./utils";
-import { isDate, toDate, toDateInTimeZone, toDateUTC } from "@chriscdn/to-date";
+import { isString, offsetStringToMilliseconds } from "./utils";
+import { toDateInTimeZone, toDateUTC } from "@chriscdn/to-date";
 import { formatDateYYYYMMDDTHHMMSS } from "@chriscdn/format-date";
-import { DateTimeInfo, LocationInfo, RawExifData } from "./types";
+import { DateTimeInfo, LocationInfo } from "./types";
+import { toNumberOrThrow } from "@chriscdn/to-number";
+
+/**
+ * Returns true if an old EXIF style date e.g., 2024:12:21 18:59:43
+ *
+ * @param dateStr
+ * @returns
+ */
+const isValidExifDateFormat = (dateStr: string): boolean =>
+  /^\d{4}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}$/.test(dateStr);
+
+const parseIsoDateTimeAndOffset = (isoString: string) => {
+  // Captures local date-time, then optional 'Z' or [+-]HH[:]?MM offset
+  const regex =
+    /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?)(Z|[+-]\d{2}(?::?\d{2})?)$/;
+  const match = isoString.match(regex);
+
+  return {
+    localTime: match?.[1] ?? null,
+    offset: match?.[2] ?? null,
+  };
+};
+
+/**
+ *
+ * @param exifDateString
+ * @returns
+ */
+const exifDateToISODate = (
+  exifDateString: string,
+): { localTime: string | null; offset: string | null } => {
+  if (isValidExifDateFormat(exifDateString)) {
+    const [datePart, timePart] = exifDateString.split(" ");
+
+    const dateSplit = datePart?.split(":") ?? [];
+    const timeSplit = timePart?.split(":") ?? [];
+
+    const year = toNumberOrThrow(dateSplit[0]);
+    const month = toNumberOrThrow(dateSplit[1]);
+    const day = toNumberOrThrow(dateSplit[2]);
+    const hour = toNumberOrThrow(timeSplit[0]);
+    const minute = toNumberOrThrow(timeSplit[1]);
+    const seconds = toNumberOrThrow(timeSplit[2]);
+
+    return {
+      localTime: formatDateYYYYMMDDTHHMMSS(
+        Date.UTC(year, month - 1, day, hour, minute, seconds),
+        "UTC",
+      )!,
+      offset: null,
+    };
+  } else {
+    // assuming "2024-12-21T18:59:43-05:00"
+    // console.log("NOW WHAT");
+
+    return parseIsoDateTimeAndOffset(exifDateString);
+  }
+};
 
 const extractDateTime = (
-  rawExif: RawExifData,
-  locationInfo: LocationInfo,
+  exifReaderTags: ExifReader.Tags,
+  timeZone: LocationInfo["timeZone"],
 ): DateTimeInfo => {
-  // The exifr lib returns a Date or string
-  const dateTimeOriginal: string | Date | null =
-    rawExif.DateTimeOriginal ?? null;
+  // console.log("-----");
+  // console.log(exifReaderTags.OffsetTimeOriginal?.description);
+  // console.log(exifReaderTags.OffsetTimeDigitized?.description);
+  // console.log("-----");
+
+  const dateTimeOriginal =
+    exifReaderTags["DateTimeOriginal"]?.description ??
+    exifReaderTags["DateTimeDigitized"]?.description ??
+    exifReaderTags["DateCreated"]?.description;
 
   const offsetTimeOriginal =
-    (rawExif.OffsetTimeOriginal as string | undefined) ?? null;
+    exifReaderTags["OffsetTimeOriginal"]?.description ??
+    exifReaderTags["OffsetTimeDigitized"]?.description;
 
   if (isString(dateTimeOriginal)) {
-    // PNGs seem to go this way
-    return _extractDateTimeFromString(dateTimeOriginal, locationInfo);
-  } else if (isDate(dateTimeOriginal)) {
-    // JPGs go this way
-    const offsetInMinutes = offsetTimeOriginal
-      ? offsetStringToMinutes(offsetTimeOriginal)
-      : null;
-
-    return _extractDateTimeFromDate(
+    return _extractDateTimeFromString(
       dateTimeOriginal,
-      locationInfo,
-      offsetInMinutes,
+      offsetTimeOriginal,
+      timeZone,
     );
   } else {
-    // null case
     return {
       localDate: null,
       localTime: null,
@@ -41,83 +97,96 @@ const extractDateTime = (
 const _extractLocalDateFromLocalTime = (localTime: string | null) =>
   localTime?.split("T")[0] ?? null;
 
-/**
- * Exifr appears to return the DateTimeOriginal as a string with a time zone,
- * such as "2024-12-21T18:59:43-05:00", for PNG files—at least for those
- * exported from Lightroom.
- */
 const _extractDateTimeFromString = (
   dateTimeOriginal: string,
-  locationInfo: LocationInfo,
+  offsetTimeOriginal: string | undefined,
+  timeZone: LocationInfo["timeZone"],
 ) => {
-  // Dates with time zone (e.g., "2024-12-21T18:59:43-05:00") are parsed correctly.
-  const correctDate = toDate(dateTimeOriginal);
+  const { localTime, offset } = exifDateToISODate(dateTimeOriginal);
 
-  if (locationInfo.timeZone) {
-    const localTime = formatDateYYYYMMDDTHHMMSS(
-      correctDate,
-      locationInfo.timeZone,
-    );
-    return {
-      localTime,
-      localDate: _extractLocalDateFromLocalTime(localTime),
-      timestamp: correctDate?.getTime() ?? null,
-    };
-  } else {
-    const localTime = dateTimeOriginal.slice(0, 19);
-    return {
-      // We want the *local time* for consistency, which we can get from dateTimeOriginal
-      localTime,
-      localDate: _extractLocalDateFromLocalTime(localTime),
-      timestamp: correctDate?.getTime() ?? null,
-    };
+  const offsetResolved = offsetTimeOriginal ?? offset;
+
+  if (localTime) {
+    const localDate = _extractLocalDateFromLocalTime(localTime);
+
+    if (offsetResolved) {
+      const utcDateTime =
+        toDateUTC(localTime)!.getTime() -
+        offsetStringToMilliseconds(offsetResolved);
+
+      return {
+        localTime,
+        localDate,
+        timestamp: utcDateTime,
+      };
+    } else if (timeZone) {
+      const dateTime = toDateInTimeZone(localTime, timeZone);
+
+      return {
+        localTime,
+        localDate,
+        timestamp: dateTime?.getTime() ?? null,
+      };
+    } else {
+      return {
+        localTime,
+        localDate,
+        timestamp: null,
+      };
+    }
   }
+
+  return {
+    localTime: null,
+    localDate: null,
+    timestamp: null,
+  };
 };
 
 /**
  * When exifr returns a date, it's incorrectly interpreted in the time zone of
  * the device. We correct it here.
  */
-const _extractDateTimeFromDate = (
-  dateTimeOriginal: Date,
-  locationInfo: LocationInfo,
-  offsetInMinutes: number | null,
-): DateTimeInfo => {
-  // parsed in device tz, so we format it back in same tz
-  const localDateAsString = formatDateYYYYMMDDTHHMMSS(dateTimeOriginal);
+// const _extractDateTimeFromDate = (
+//   dateTimeOriginal: Date,
+//   locationInfo: LocationInfo,
+//   offsetInMinutes: number | null,
+// ): DateTimeInfo => {
+//   // parsed in device tz, so we format it back in same tz
+//   const localDateAsString = formatDateYYYYMMDDTHHMMSS(dateTimeOriginal);
 
-  const localDate = _extractLocalDateFromLocalTime(localDateAsString);
+//   const localDate = _extractLocalDateFromLocalTime(localDateAsString);
 
-  if (offsetInMinutes !== null) {
-    const utcDate = toDateUTC(localDateAsString);
+//   if (offsetInMinutes !== null) {
+//     const utcDate = toDateUTC(localDateAsString);
 
-    if (utcDate) {
-      utcDate?.setMinutes(utcDate.getUTCMinutes() - offsetInMinutes);
-    }
+//     if (utcDate) {
+//       utcDate?.setMinutes(utcDate.getUTCMinutes() - offsetInMinutes);
+//     }
 
-    return {
-      localTime: localDateAsString,
-      timestamp: utcDate?.getTime() ?? null,
-      localDate,
-    };
-  } else if (locationInfo.timeZone) {
-    const fixedDate = toDateInTimeZone(
-      localDateAsString,
-      locationInfo.timeZone,
-    );
+//     return {
+//       localTime: localDateAsString,
+//       timestamp: utcDate?.getTime() ?? null,
+//       localDate,
+//     };
+//   } else if (locationInfo.timeZone) {
+//     const fixedDate = toDateInTimeZone(
+//       localDateAsString,
+//       locationInfo.timeZone,
+//     );
 
-    return {
-      localTime: localDateAsString,
-      timestamp: fixedDate?.getTime() ?? null,
-      localDate,
-    };
-  } else {
-    return {
-      localTime: localDateAsString,
-      timestamp: null,
-      localDate,
-    };
-  }
-};
+//     return {
+//       localTime: localDateAsString,
+//       timestamp: fixedDate?.getTime() ?? null,
+//       localDate,
+//     };
+//   } else {
+//     return {
+//       localTime: localDateAsString,
+//       timestamp: null,
+//       localDate,
+//     };
+//   }
+// };
 
 export { extractDateTime };

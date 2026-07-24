@@ -1,4 +1,4 @@
-import { toIntegerOrThrow, toNumberOrThrow } from "@chriscdn/to-number";
+import { toIntegerOrThrow } from "@chriscdn/to-number";
 
 const isFile = (e: File | string): e is File => typeof e !== "string";
 const isString = (value: unknown): value is string => typeof value === "string";
@@ -45,35 +45,39 @@ const offsetStringToMinutes = (offset: string): number => {
   return sign * (hours * 60 + minutes);
 };
 
-const convertLatLonToDecimal = (
-  coord: string | null | undefined,
-): number | null => {
-  const match = coord?.match(/^(\d+),(\d+\.\d+)([NSWE])$/);
+const offsetStringToMilliseconds = (offset: string): number =>
+  offsetStringToMinutes(offset) * 60_000;
 
-  if (match) {
-    const [_, degreesStr, minutesStr, hemisphere] = match;
+// const convertLatLonToDecimal = (
+//   coord: string | null | undefined,
+// ): number | null => {
+//   const match = coord?.match(/^(\d+),(\d+\.\d+)([NSWE])$/);
 
-    const degrees = toIntegerOrThrow(degreesStr);
-    const minutes = toNumberOrThrow(minutesStr);
+//   if (match) {
+//     const [_, degreesStr, minutesStr, hemisphere] = match;
 
-    // Convert to decimal degrees
-    let decimal = degrees + minutes / 60;
+//     const degrees = toIntegerOrThrow(degreesStr);
+//     const minutes = toNumberOrThrow(minutesStr);
 
-    // Apply hemisphere correction
-    if (hemisphere === "S" || hemisphere === "W") {
-      decimal *= -1;
-    }
+//     // Convert to decimal degrees
+//     let decimal = degrees + minutes / 60;
 
-    return decimal;
-  } else {
-    return null;
-  }
-};
+//     // Apply hemisphere correction
+//     if (hemisphere === "S" || hemisphere === "W") {
+//       decimal *= -1;
+//     }
+
+//     return decimal;
+//   } else {
+//     return null;
+//   }
+// };
 
 export {
-  convertLatLonToDecimal,
+  // convertLatLonToDecimal,
   getSizeInBrowser,
   isFile,
   isString,
+  offsetStringToMilliseconds,
   offsetStringToMinutes,
 };

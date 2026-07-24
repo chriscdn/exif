@@ -1,7 +1,5 @@
 type Source = File | string;
 
-type RawExifData = any;
-
 type LocationInfo = Pick<ExifData, "latitude" | "longitude" | "timeZone">;
 
 type SizeInfo = Pick<ExifData, "width" | "height">;
@@ -24,6 +22,8 @@ type ExifData = {
 
   city: string | null;
   state: string | null;
+  location: string | null;
+  subLocation: string | null;
   countryCode: string | null;
   country: string | null;
 
@@ -32,11 +32,4 @@ type ExifData = {
   keywords: string[];
 };
 
-export type {
-  Source,
-  RawExifData,
-  LocationInfo,
-  SizeInfo,
-  DateTimeInfo,
-  ExifData,
-};
+export type { Source, LocationInfo, SizeInfo, DateTimeInfo, ExifData };
