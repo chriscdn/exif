@@ -64,7 +64,6 @@ Fields are `null` when the data isn't available.
 - **`country`** (`string|null`): Country where taken.
 - **`countryCode`** (`string|null`): ISO country code.
 - **`location`** (`string|null`): Location.
-- **`subLocation`** (`string|null`): Sub-location.
 - **`rating`** (`number|null`): Numeric rating.
 - **`mimetype`** (`string|null`): MIME type (e.g., `image/jpeg`).
 - **`keywords`** (`string[]`): Associated tags; empty array if none.

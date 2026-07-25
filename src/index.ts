@@ -27,7 +27,6 @@ const exif = async (item: Source): Promise<ExifData> => {
     city: null,
     state: null,
     location: null,
-    subLocation: null,
     country: null,
     countryCode: null,
     rating: null,
@@ -35,8 +34,19 @@ const exif = async (item: Source): Promise<ExifData> => {
     keywords: [],
   };
 
-  const exifReaderTags = await ExifReader.load(item);
+  const exifReaderTags = await ExifReader.load(item, {
+    expanded: true,
+    includeTags: {
+      exif: true,
+      iptc: true,
+      xmp: true,
+      file: true,
+      png: true,
+      gps: true,
+    },
+  });
 
+  // fs.writeFile("temp.json", JSON.stringify(exifReaderTags), "utf-8");
   // console.log(JSON.stringify(exifReaderTags));
 
   const locationInfo = extractLatLngTz(exifReaderTags);
@@ -48,19 +58,34 @@ const exif = async (item: Source): Promise<ExifData> => {
   _exif.title = extractTitle(exifReaderTags);
   _exif.caption = extractCaption(exifReaderTags);
 
-  _exif.city = exifReaderTags["City"]?.description ?? null;
-  _exif.state = exifReaderTags["Province/State"]?.description ?? null;
-  _exif.location = exifReaderTags["Location"]?.description ?? null;
-  _exif.subLocation = exifReaderTags["Sub-location"]?.description ?? null;
+  _exif.city =
+    exifReaderTags.xmp?.["City"]?.description ??
+    exifReaderTags.iptc?.["City"]?.description ??
+    null;
+
+  _exif.state =
+    exifReaderTags.xmp?.["State"]?.description ??
+    exifReaderTags.iptc?.["Province/State"]?.description ??
+    null;
+
+  _exif.location =
+    exifReaderTags.xmp?.["Location"]?.description ??
+    exifReaderTags.iptc?.["Sub-location"]?.description ??
+    null;
 
   _exif.countryCode =
-    exifReaderTags["Country/Primary Location Code"]?.description ?? null;
+    exifReaderTags.xmp?.["CountryCode"]?.description ??
+    exifReaderTags.iptc?.["Country/Primary Location Code"]?.description ??
+    null;
+
   _exif.country =
-    exifReaderTags["Country/Primary Location Name"]?.description ?? null;
+    exifReaderTags.xmp?.["Country"]?.description ??
+    exifReaderTags.iptc?.["Country/Primary Location Name"]?.description ??
+    null;
 
-  _exif.mimetype = exifReaderTags["format"]?.description ?? null;
+  _exif.mimetype = exifReaderTags.xmp?.["format"]?.description ?? null;
 
-  _exif.rating = toNumber(exifReaderTags["Rating"]?.value);
+  _exif.rating = toNumber(exifReaderTags.xmp?.["Rating"]?.value);
 
   _exif.keywords = extractKeywords(exifReaderTags);
 

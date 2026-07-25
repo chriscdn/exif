@@ -1,5 +1,9 @@
 import { isString, offsetStringToMilliseconds } from "./utils";
-import { toDateInTimeZone, toDateUTC } from "@chriscdn/to-date";
+import {
+  toDateInTimeZone,
+  toDateUTC,
+  isLocalTimeISO8601String,
+} from "@chriscdn/to-date";
 import { formatDateYYYYMMDDTHHMMSS } from "@chriscdn/format-date";
 import { DateTimeInfo, LocationInfo } from "./types";
 import { toNumberOrThrow } from "@chriscdn/to-number";
@@ -10,7 +14,8 @@ import { toNumberOrThrow } from "@chriscdn/to-number";
  * @param dateStr
  * @returns
  */
-const _isValidExifDateFormat = (dateStr: string): boolean =>
+
+const _isExifDateFormat = (dateStr: string): boolean =>
   /^\d{4}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}$/.test(dateStr);
 
 const _parseIsoDateTimeAndOffset = (isoString: string) => {
@@ -33,7 +38,7 @@ const _parseIsoDateTimeAndOffset = (isoString: string) => {
 const _exifDateToISODate = (
   exifDateString: string,
 ): { localTime: string | null; offset: string | null } => {
-  if (_isValidExifDateFormat(exifDateString)) {
+  if (_isExifDateFormat(exifDateString)) {
     const [datePart, timePart] = exifDateString.split(" ");
 
     const dateSplit = datePart?.split(":") ?? [];
@@ -53,10 +58,14 @@ const _exifDateToISODate = (
       )!,
       offset: null,
     };
+  } else if (isLocalTimeISO8601String(exifDateString)) {
+    // e.g., "2024-12-21T18:59:43"
+    return {
+      localTime: exifDateString,
+      offset: null,
+    };
   } else {
-    // assuming "2024-12-21T18:59:43-05:00"
-    // console.log("NOW WHAT");
-
+    // e.g., "2024-12-21T18:59:43-05:00"
     return _parseIsoDateTimeAndOffset(exifDateString);
   }
 };
@@ -110,18 +119,26 @@ const _extractDateTimeFromString = (
   };
 };
 
+const _extractDateTimeFromIPTC = (exifReaderTags: ExifReader.ExpandedTags) => {
+  const datePart = exifReaderTags.iptc?.["Date Created"]?.description;
+  const timePart = exifReaderTags.iptc?.["Time Created"]?.description;
+
+  return datePart && timePart ? `${datePart}T${timePart}` : undefined;
+};
+
 const extractDateTime = (
-  exifReaderTags: ExifReader.Tags,
+  exifReaderTags: ExifReader.ExpandedTags,
   timeZone: LocationInfo["timeZone"],
 ): DateTimeInfo => {
   const dateTimeOriginal =
-    exifReaderTags["DateTimeOriginal"]?.description ??
-    exifReaderTags["DateTimeDigitized"]?.description ??
-    exifReaderTags["DateCreated"]?.description;
+    exifReaderTags.exif?.["DateTimeOriginal"]?.description ??
+    exifReaderTags.exif?.["DateTimeDigitized"]?.description ??
+    exifReaderTags.xmp?.["DateCreated"]?.description ??
+    _extractDateTimeFromIPTC(exifReaderTags);
 
   const offsetTimeOriginal =
-    exifReaderTags["OffsetTimeOriginal"]?.description ??
-    exifReaderTags["OffsetTimeDigitized"]?.description;
+    exifReaderTags.exif?.["OffsetTimeOriginal"]?.description ??
+    exifReaderTags.exif?.["OffsetTimeDigitized"]?.description;
 
   if (isString(dateTimeOriginal)) {
     return _extractDateTimeFromString(

@@ -4,6 +4,23 @@ import { offsetStringToMinutes } from "../src/utils";
 
 import { exif, type ExifData } from "../src/index";
 
+const noLocationMixin = {
+  latitude: null,
+  longitude: null,
+  timeZone: null,
+  city: null,
+  state: null,
+  location: null,
+  country: null,
+  countryCode: null,
+};
+
+const noMetadataMixin = {
+  localTime: null,
+  localDate: null,
+  timestamp: null,
+};
+
 const metadata: Record<string, Partial<ExifData>> = {
   cn_tower: {
     latitude: 43.642956,
@@ -15,6 +32,11 @@ const metadata: Record<string, Partial<ExifData>> = {
     caption: null,
     width: 225,
     height: 300,
+    city: "Toronto",
+    state: "Ontario",
+    location: "Downtown Toronto",
+    country: "Canada",
+    countryCode: "CA",
   },
   tower_bridge: {
     latitude: 51.508417,
@@ -44,10 +66,18 @@ describe("CN Tower - HEIC - Original File from Photos app", async () => {
   const image = resolve(__dirname, "./assets/cn_tower.original.heic");
   const data = await exif(image);
 
+  // city, state, country, countryCode, and location is xmp or iptc metadata,
+  // perhaps directly added by Lightroom
+
   it("Metadata Comparison", () => {
     expect(data).toEqual(
       expect.objectContaining({
         ...metadata.cn_tower,
+        city: null,
+        state: null,
+        country: null,
+        countryCode: null,
+        location: null,
         width: 4032,
         height: 3024,
       }),
@@ -79,9 +109,7 @@ describe("CN Tower - Lightroom Export - JPG - Full Metadata - No Location", asyn
     expect(data).toEqual(
       expect.objectContaining({
         ...metadata.cn_tower,
-        latitude: null,
-        longitude: null,
-        timeZone: null,
+        ...noLocationMixin,
       }),
     );
   });
@@ -95,13 +123,8 @@ describe("CN Tower - Lightroom Export - JPG - No Metadata", async () => {
     expect(data).toEqual(
       expect.objectContaining({
         ...metadata.cn_tower,
-        latitude: null,
-        longitude: null,
-        timeZone: null,
-        localTime: null,
-        localDate: null,
-        timestamp: null,
-        caption: null,
+        ...noLocationMixin,
+        ...noMetadataMixin,
       }),
     );
   });
@@ -129,9 +152,7 @@ describe("CN Tower - Lightroom Export - PNG - Full Metadata - No Location", asyn
     expect(data).toEqual(
       expect.objectContaining({
         ...metadata.cn_tower,
-        latitude: null,
-        longitude: null,
-        timeZone: null,
+        ...noLocationMixin,
       }),
     );
   });
@@ -145,13 +166,8 @@ describe("CN Tower - Lightroom Export - PNG - No Metadata", async () => {
     expect(data).toEqual(
       expect.objectContaining({
         ...metadata.cn_tower,
-        latitude: null,
-        longitude: null,
-        timeZone: null,
-        localTime: null,
-        localDate: null,
-        timestamp: null,
-        caption: null,
+        ...noLocationMixin,
+        ...noMetadataMixin,
       }),
     );
   });

@@ -13,7 +13,6 @@ type ExifData = {
     city: string | null;
     state: string | null;
     location: string | null;
-    subLocation: string | null;
     countryCode: string | null;
     country: string | null;
     rating: number | null;

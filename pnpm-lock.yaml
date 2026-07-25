@@ -12,8 +12,8 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       '@chriscdn/to-date':
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       '@chriscdn/to-number':
         specifier: ^2.1.1
         version: 2.1.1
@@ -57,8 +57,8 @@ packages:
   '@chriscdn/promise-semaphore@4.0.0':
     resolution: {integrity: sha512-vMFXvksQF3zy3e0r5hL8FUMhajcbSd7HJOcGI4CLYQgjd5znoqHIfzYCYVlw0mCYUjzqk5NTIp7mY7m+IB3+uQ==}
 
-  '@chriscdn/to-date@2.0.2':
-    resolution: {integrity: sha512-1dcwDK59WqLqET9zg6tXY2+kc+IuXV1vAlM5SAns5pa2h4dX4ir5z/00Pb4vOsOjP9eHi6ynIy+RXNIRtYeHCA==}
+  '@chriscdn/to-date@2.0.3':
+    resolution: {integrity: sha512-qutoFd+Cxb8Un3pyMBUooxBK0wJvtoGPOlkT5u/ffR8jvhqe7tEyzworl0waldQATtQRajDpjidw0fR5eGL8Gg==}
 
   '@chriscdn/to-number@2.1.1':
     resolution: {integrity: sha512-ADuqSSs+Z6TSS9yXovk7ghiWAsFlEKU5w27TdQ0lDtaOgukkL+sz4x958ICfdoRKLyFNjX3VED/GqolSnBWzwg==}
@@ -1046,7 +1046,7 @@ snapshots:
   '@chriscdn/format-date@2.0.4':
     dependencies:
       '@chriscdn/memoize': 2.0.2
-      '@chriscdn/to-date': 2.0.2
+      '@chriscdn/to-date': 2.0.3
 
   '@chriscdn/memoize@2.0.2':
     dependencies:
@@ -1055,7 +1055,7 @@ snapshots:
 
   '@chriscdn/promise-semaphore@4.0.0': {}
 
-  '@chriscdn/to-date@2.0.2':
+  '@chriscdn/to-date@2.0.3':
     dependencies:
       '@chriscdn/to-number': 2.1.1
 

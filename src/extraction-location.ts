@@ -1,7 +1,6 @@
 // https://github.com/photostructure/tz-lookup
 import tzlookup from "@photostructure/tz-lookup";
 
-import arrify from "arrify";
 import { LocationInfo } from "./types";
 import { isString } from "./utils";
 import { toNumber, RoundingMode, isNumber } from "@chriscdn/to-number";
@@ -15,17 +14,51 @@ import { toNumber, RoundingMode, isNumber } from "@chriscdn/to-number";
  * @param exifReaderTags
  * @returns
  */
-const extractLatLngTz = (exifReaderTags: ExifReader.Tags): LocationInfo => {
-  // latString can actually be a number as well
 
-  let latString = exifReaderTags["GPSLatitude"]?.description as
+const extractLatLngTz = (
+  exifReaderTags: ExifReader.ExpandedTags,
+): LocationInfo => {
+  return (
+    _extractLatLngTzFromExif(exifReaderTags) ??
+    _extractLatLngTzFromXmp(exifReaderTags) ?? {
+      latitude: null,
+      longitude: null,
+      timeZone: null,
+    }
+  );
+};
+
+// ExifReader does us the favour of resolving the gps coordinates as decimal.
+// This seems to only happen if the location is in the exif.
+const _extractLatLngTzFromExif = (
+  exifReaderTags: ExifReader.ExpandedTags,
+): LocationInfo | null => {
+  const latitude = toNumber(exifReaderTags.gps?.Latitude, {
+    digits: 6,
+    roundingMode: RoundingMode.ROUND,
+  });
+
+  const longitude = toNumber(exifReaderTags.gps?.Longitude, {
+    digits: 6,
+    roundingMode: RoundingMode.ROUND,
+  });
+  if (isNumber(latitude) && isNumber(longitude)) {
+    const timeZone = tzlookup(latitude, longitude);
+    return { latitude, longitude, timeZone };
+  } else {
+    return null;
+  }
+};
+
+const _extractLatLngTzFromXmp = (
+  exifReaderTags: ExifReader.ExpandedTags,
+): LocationInfo | null => {
+  let latString = exifReaderTags.xmp?.["GPSLatitude"]?.description as
     | string
-    | number
     | undefined;
 
-  let lonString = exifReaderTags["GPSLongitude"]?.description as
+  let lonString = exifReaderTags.xmp?.["GPSLongitude"]?.description as
     | string
-    | number
     | undefined;
 
   if (latString && lonString) {
@@ -39,13 +72,6 @@ const extractLatLngTz = (exifReaderTags: ExifReader.Tags): LocationInfo => {
       // case "43.642956N"
       northOrSouth = latString[latString.length - 1] as "N" | "S";
       latString = latString.slice(0, -1);
-    } else {
-      // check if hemisphere defined in GPSLatitudeRef field
-      const gpsLatitudeRef = arrify(exifReaderTags["GPSLatitudeRef"]?.value)[0];
-
-      if (gpsLatitudeRef === "N" || gpsLatitudeRef === "S") {
-        northOrSouth = gpsLatitudeRef;
-      }
     }
 
     if (
@@ -54,14 +80,6 @@ const extractLatLngTz = (exifReaderTags: ExifReader.Tags): LocationInfo => {
     ) {
       westOrEast = lonString[lonString.length - 1] as "W" | "E";
       lonString = lonString.slice(0, -1);
-    } else {
-      const gpsLongitudeRef = arrify(
-        exifReaderTags["GPSLongitudeRef"]?.value,
-      )[0];
-
-      if (gpsLongitudeRef === "W" || gpsLongitudeRef === "E") {
-        westOrEast = gpsLongitudeRef;
-      }
     }
 
     const latNumber = toNumber(latString, {
@@ -89,10 +107,7 @@ const extractLatLngTz = (exifReaderTags: ExifReader.Tags): LocationInfo => {
       const latitude = latitudeFactor * latNumber;
       const longitude = longitudeFactor * lonNumber;
 
-      const timeZone =
-        isNumber(latitude) && isNumber(longitude)
-          ? tzlookup(latitude, longitude)
-          : null;
+      const timeZone = tzlookup(latitude, longitude);
 
       // https://en.wikipedia.org/wiki/Decimal_degrees
       return {
@@ -103,11 +118,7 @@ const extractLatLngTz = (exifReaderTags: ExifReader.Tags): LocationInfo => {
     }
   }
 
-  return {
-    latitude: null,
-    longitude: null,
-    timeZone: null,
-  };
+  return null;
 };
 
 export { extractLatLngTz };

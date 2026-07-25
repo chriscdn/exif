@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@chriscdn/format-date": "^2.0.4",
-    "@chriscdn/to-date": "^2.0.2",
+    "@chriscdn/to-date": "^2.0.3",
     "@chriscdn/to-number": "^2.1.1",
     "@photostructure/tz-lookup": "^11.6.0",
     "arrify": "^3.0.0",
